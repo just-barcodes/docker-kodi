@@ -1,3 +1,10 @@
+# Fork: just-barcodes
+
+- use latest kodi version
+- update Ubuntu version to 24.10
+- Makefile for podman build and execution
+
+
 # erichough/kodi
 
 Dockerized [Kodi](https://kodi.tv/) with audio and video.
