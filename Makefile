@@ -1,3 +1,9 @@
+.PHONY: help
+help:
+	@echo "Possible targets"
+	@echo "	- build"
+	@echo "	- run"
+
 .PHONY: build
 build:
 	podman build . -t just-barcodes/kodi
