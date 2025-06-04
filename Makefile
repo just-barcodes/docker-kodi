@@ -10,5 +10,5 @@ build:
 
 .PHONY: run
 run:
-	x11docker --wayland --backend=podman --pulseaudio=host --gpu --homedir=~/Videos/kodi --network just-barcodes/kodi
+	x11docker --wayland --backend=podman --pulseaudio=host --gpu --home=~/Videos/kodi --network just-barcodes/kodi
 
