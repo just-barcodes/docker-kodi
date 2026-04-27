@@ -1,11 +1,4 @@
-# Fork: just-barcodes
-
-- use latest kodi version
-- update Ubuntu version to 24.10
-- Makefile for podman build and execution
-
-
-# erichough/kodi
+# just-barcodes/docker-kodi
 
 Dockerized [Kodi](https://kodi.tv/) with audio and video.
 
@@ -16,16 +9,17 @@ Dockerized [Kodi](https://kodi.tv/) with audio and video.
 * fully-functional [Kodi](https://kodi.tv/) installation in a [Docker](https://www.docker.com/) container
 * **audio** ([ALSA or PulseAudio](https://kodi.wiki/view/Linux_audio)) and **video** (with optional OpenGL hardware 
   video acceleration) via [x11docker](https://github.com/mviereck/x11docker/)
-* simple, Ubuntu-based image that adheres to the [official Kodi installation instructions](https://kodi.wiki/view/HOW-TO:Install_Kodi_for_Linux#Installing_Kodi_on_Ubuntu-based_distributions)
+* simple Ubuntu 26.04 LTS image using the Kodi packages available in the Ubuntu repositories
 * clean shutdown of Kodi when its container is terminated
+* `Makefile` helpers for local Podman build and `x11docker` execution
 
 ## Host Prerequisites
 
 The host system will need the following:
 
-1. **Linux** and [**Docker**](https://www.docker.com)
+1. **Linux** and a container runtime such as [**Docker**](https://www.docker.com) or [**Podman**](https://podman.io/)
 
-   This image should work on any Linux distribution with a functional Docker installation.
+   This image should work on any Linux distribution with a functional container runtime installation.
    
 1. **A connected display and speaker(s)**
 
@@ -46,9 +40,13 @@ The host system will need the following:
 
 ### Starting Kodi
 
-Use `x11docker` to start the `erichough/kodi` Docker image. Detailing the myriad of `x11docker` options is beyond the 
+Use `x11docker` to start the `just-barcodes/kodi` image. Detailing the myriad of `x11docker` options is beyond the 
 scope of this document; please consult the [`x11docker` documentation](https://github.com/mviereck/x11docker/) to find 
 the set of options that work for your setup.
+
+To build the image locally with Podman:
+
+    $ make build
 
 Below is an example command (split into multiple lines for clarity) that starts Kodi with a fresh X.Org X server with
 PulseAudio sound, hardware video acceleration, a persistent Kodi home directory, and a shared read-only Docker mount for
@@ -59,9 +57,9 @@ media files:
                 --gpu                                  \
                 --homedir /host/path/to/kodi/home      \
                 -- -v /host/path/to/media:/media:ro -- \
-                erichough/kodi
+                just-barcodes/kodi
            
-Note that the optional argument passed between a pair of `--` defines additional arguments to be passed to `docker run`.
+Note that the optional argument passed between a pair of `--` defines additional arguments to be passed to the container runtime.
 
 ### Stopping Kodi
 
@@ -74,12 +72,11 @@ You can also [terminate the container from the command line](doc/advanced.md#com
 
     [Unit]
     Description=Dockerized Kodi
-    Requires=docker.service
-    After=network.target docker.service
+    After=network.target
     
     [Service]
-    ExecStartPre=/usr/bin/docker pull erichough/kodi
-    ExecStart=/usr/bin/x11docker ... erichough/kodi
+    ExecStartPre=/usr/bin/podman pull just-barcodes/kodi
+    ExecStart=/usr/bin/x11docker ... just-barcodes/kodi
     Restart=always
     KillMode=process
     
@@ -98,10 +95,10 @@ The [advanced topics](doc/advanced.md) documentation describes a few more useful
 ## Help!
 
 Something not working quite right? Are you stuck? Please ask your questions in the
-[discussion group](https://github.com/ehough/docker-kodi/discussions), where we exchange help and share ideas.
+[discussion group](https://github.com/just-barcodes/docker-kodi/discussions), where we exchange help and share ideas.
 
 ## Contributing
 
 Constructive criticism and contributions are welcome! Please 
-[submit an issue](https://github.com/ehough/docker-kodi/issues/new) or 
-[pull request](https://github.com/ehough/docker-kodi/compare).
+[submit an issue](https://github.com/just-barcodes/docker-kodi/issues/new) or 
+[pull request](https://github.com/just-barcodes/docker-kodi/compare).

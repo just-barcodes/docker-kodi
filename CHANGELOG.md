@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+* Switch the base image to Ubuntu 26.04 LTS and install Kodi directly from the Ubuntu repositories
+* Refresh project documentation and examples for the `just-barcodes/kodi` fork and Podman-based workflow
+
+### Fixed
+
+* Make the local `make build` target work in rootless Podman environments by default
+* Harden `entrypoint.sh` command and timeout handling
+
 ## [3.0.0] - 2021-02-22
 
 ### Changed

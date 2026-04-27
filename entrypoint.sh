@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # ehough/docker-kodi - Dockerized Kodi with audio and video.
 #
 # https://github.com/ehough/docker-kodi
@@ -48,7 +50,7 @@ die () {
 
 get_kodi_pid () {
 
-  pidof kodi.bin
+  pidof kodi.bin 2>/dev/null || true
 }
 
 stop_kodi () {
@@ -60,6 +62,10 @@ stop_kodi () {
   local timer=0
   local -r timeout="${!ENV_VAR_KODI_QUIT_TIMEOUT:-10}"
   local remaining
+
+  if ! [[ $timeout =~ ^[0-9]+$ ]]; then
+    die "Invalid $ENV_VAR_KODI_QUIT_TIMEOUT value: $timeout" 1
+  fi
 
   log "asking Kodi to quit"
   kodi-send --action="Quit"
@@ -87,7 +93,7 @@ start_kodi () {
 
   log "starting Kodi with command: $command"
 
-  $command
+  bash -lc "$command"
 }
 
 start_kodi

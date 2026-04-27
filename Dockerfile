@@ -18,29 +18,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-ARG UBUNTU_RELEASE=24.10
+ARG UBUNTU_RELEASE=26.04
 FROM ubuntu:$UBUNTU_RELEASE
 
-# just use latest version
-# ARG KODI_VERSION=
-
-# https://github.com/ehough/docker-nfs-server/pull/3#issuecomment-387880692
 ARG DEBIAN_FRONTEND=noninteractive
-
-# install the team-xbmc ppa
-RUN apt-get update                                                                  && \
-    apt-get install -y --no-install-recommends gpg-agent software-properties-common && \
-    add-apt-repository ppa:team-xbmc/ppa                                            && \
-    apt-get -y purge openssl gpg-agent software-properties-common                   && \
-    apt-get -y --purge autoremove                                                   && \
-    rm -rf /var/lib/apt/lists/*
 
 ARG KODI_EXTRA_PACKAGES=
 
 # besides kodi, we will install a few extra packages:
 #  - ca-certificates              allows Kodi to properly establish HTTPS connections
 #  - kodi-eventclients-kodi-send  allows us to shut down Kodi gracefully upon container termination
-#  - kodi-game-libretro           allows Kodi to utilize Libretro cores as game add-ons
 #  - kodi-inputstream-*           input stream add-ons
 #  - kodi-peripheral-*            enables the use of gamepads, joysticks, game controllers, etc.
 #  - locales                      additional spoken language support (via x11docker --lang option)
@@ -60,14 +47,14 @@ RUN packages="                                               \
     pulseaudio                                               \
     tzdata                                                   \
     va-driver-all                                            \
-    ${KODI_EXTRA_PACKAGES}"                               && \
-                                                             \
+     ${KODI_EXTRA_PACKAGES}"                               && \
+                                                              \
     apt-get update                                        && \
     apt-get install -y --no-install-recommends $packages  && \
     apt-get -y --purge autoremove                         && \
+    apt-get clean                                         && \
     rm -rf /var/lib/apt/lists/*
 
 # setup entry point
 COPY entrypoint.sh /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
