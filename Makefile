@@ -4,11 +4,14 @@ help:
 	@echo "	- build"
 	@echo "	- run"
 
+IMAGE ?= just-barcodes/kodi
+PODMAN_BUILD_FLAGS ?= --cgroup-manager=cgroupfs
+KODI_HOME ?= $(HOME)/Videos/kodi
+
 .PHONY: build
 build:
-	podman build . -t just-barcodes/kodi
+	podman build $(PODMAN_BUILD_FLAGS) . -t $(IMAGE)
 
 .PHONY: run
 run:
-	x11docker --wayland --backend=podman --pulseaudio=host --gpu --home=~/Videos/kodi --network just-barcodes/kodi
-
+	x11docker --wayland --backend=podman --pulseaudio=host --gpu --home=$(KODI_HOME) --network $(IMAGE)
