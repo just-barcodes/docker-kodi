@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-ARG UBUNTU_RELEASE=24.04
+ARG UBUNTU_RELEASE=26.04
 FROM ubuntu:$UBUNTU_RELEASE
 
 ARG DEBIAN_FRONTEND=noninteractive

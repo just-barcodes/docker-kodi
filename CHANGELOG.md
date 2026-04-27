@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-* Switch the base image to Ubuntu 24.04 LTS and install Kodi directly from the Ubuntu repositories
+* Switch the base image to Ubuntu 26.04 LTS and install Kodi directly from the Ubuntu repositories
 * Refresh project documentation and examples for the `just-barcodes/kodi` fork and Podman-based workflow
 
 ### Fixed

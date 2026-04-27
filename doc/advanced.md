@@ -23,15 +23,15 @@ podman build .                                                                  
          -t just-barcodes/kodi:custom
 ```
 
-Add-on package names can be discovered with `apt-cache search '^kodi-'` inside an Ubuntu 24.04 environment, and you can install *any* Ubuntu package that you'd like.
+Add-on package names can be discovered with `apt-cache search '^kodi-'` inside an Ubuntu 26.04 environment, and you can install *any* Ubuntu package that you'd like.
 
 ## Image Variants
 
-This fork currently tracks the Kodi packages shipped by Ubuntu 24.04.
+This fork currently tracks the Kodi packages shipped by Ubuntu 26.04.
 
 | Image | Kodi |
 |-------|------|
-| `just-barcodes/kodi` | v20 "Nexus" package stream from Ubuntu 24.04 |
+| `just-barcodes/kodi` | v21 "Omega" package stream from Ubuntu 26.04 |
 
 ## Custom Startup Behavior
 

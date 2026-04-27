@@ -9,7 +9,7 @@ Dockerized [Kodi](https://kodi.tv/) with audio and video.
 * fully-functional [Kodi](https://kodi.tv/) installation in a [Docker](https://www.docker.com/) container
 * **audio** ([ALSA or PulseAudio](https://kodi.wiki/view/Linux_audio)) and **video** (with optional OpenGL hardware 
   video acceleration) via [x11docker](https://github.com/mviereck/x11docker/)
-* simple Ubuntu 24.04 LTS image using the Kodi packages available in the Ubuntu repositories
+* simple Ubuntu 26.04 LTS image using the Kodi packages available in the Ubuntu repositories
 * clean shutdown of Kodi when its container is terminated
 * `Makefile` helpers for local Podman build and `x11docker` execution
 
