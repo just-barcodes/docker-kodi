@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# ehough/docker-kodi - Dockerized Kodi with audio and video.
+# just-barcodes/docker-kodi - Dockerized Kodi with audio and video.
 #
-# https://github.com/ehough/docker-kodi
-# https://hub.docker.com/r/erichough/kodi/
+# https://github.com/just-barcodes/docker-kodi
+# Forked from https://github.com/ehough/docker-kodi
 #
 # Copyright 2018-2021 - Eric Hough (eric@tubepress.com)
 #
