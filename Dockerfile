@@ -34,6 +34,7 @@ ARG KODI_EXTRA_PACKAGES=
 #  - pulseaudio                   in case the user prefers PulseAudio instead of ALSA
 #  - tzdata                       necessary for timezone selection
 #  - va-driver-all                the full suite of drivers for the Video Acceleration API (VA API)
+# hadolint ignore=SC2086
 RUN packages="                                               \
                                                              \
     ca-certificates                                          \
