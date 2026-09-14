@@ -10,7 +10,7 @@
 set -euo pipefail
 
 readonly runtime="${CONTAINER_RUNTIME:-podman}"
-readonly image="${IMAGE:-just-barcodes/kodi}"
+readonly image="${IMAGE:-localhost/just-barcodes/kodi}"
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 readonly repo_root
