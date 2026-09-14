@@ -101,6 +101,14 @@ test_kodi_command_is_used () {
   assert_contains "KODI_COMMAND replaces kodi-standalone" "$out" "custom command ran"
 }
 
+test_invalid_quit_timeout_rejected_at_startup () {
+  local out rc=0
+  out=$("$runtime" run --rm -e KODI_QUIT_TIMEOUT=120s -e KODI_COMMAND="echo started" "$image" 2>&1) || rc=$?
+  assert_contains "invalid KODI_QUIT_TIMEOUT is reported" "$out" "Invalid KODI_QUIT_TIMEOUT value: 120s"
+  assert_not_contains "invalid KODI_QUIT_TIMEOUT prevents startup" "$out" "started"
+  assert_eq "invalid KODI_QUIT_TIMEOUT exits non-zero" 1 "$rc"
+}
+
 test_no_login_shell () {
   # A login shell would source ~/.profile from the (host-mounted) home
   # directory, turning a data directory into a code-execution vector.

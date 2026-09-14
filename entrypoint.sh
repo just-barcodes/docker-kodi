@@ -63,10 +63,6 @@ stop_kodi () {
   local -r timeout="${!ENV_VAR_KODI_QUIT_TIMEOUT:-10}"
   local remaining
 
-  if ! [[ $timeout =~ ^[0-9]+$ ]]; then
-    die "Invalid $ENV_VAR_KODI_QUIT_TIMEOUT value: $timeout" 1
-  fi
-
   log "asking Kodi to quit"
   kodi-send --action="Quit"
 
@@ -84,9 +80,21 @@ stop_kodi () {
   log "WARNING: timeout of $timeout second(s) reached"
 }
 
+check_quit_timeout () {
+
+  local -r timeout="${!ENV_VAR_KODI_QUIT_TIMEOUT:-10}"
+
+  if ! [[ $timeout =~ ^[0-9]+$ ]]; then
+    die "Invalid $ENV_VAR_KODI_QUIT_TIMEOUT value: $timeout" 1
+  fi
+}
+
 start_kodi () {
 
   local -r command="${!ENV_VAR_KODI_COMMAND:-kodi-standalone}"
+
+  # fail now rather than at shutdown, when it is too late to ask Kodi to quit
+  check_quit_timeout
 
   # gracefully stop Kodi whenever this script is terminated for any reason
   trap stop_kodi EXIT
