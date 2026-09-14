@@ -6,15 +6,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+* GitHub Actions CI: shellcheck, hadolint, image build, and integration tests for the entrypoint and the
+  `KODI_EXTRA_PACKAGES` build argument; a weekly scheduled build catches upstream package breakage
+* Security notes in the README
+
 ### Changed
 
 * Switch the base image to Ubuntu 26.04 LTS and install Kodi directly from the Ubuntu repositories
 * Refresh project documentation and examples for the `just-barcodes/kodi` fork and Podman-based workflow
+* Kodi runs as the unprivileged user `kodi` (uid 1000) instead of root; setuid/setgid bits are removed from the image
+* `make build` tags the image as `localhost/just-barcodes/kodi` and always pulls the latest base image
+* `make run` uses a dedicated PulseAudio socket (`--pulseaudio`) instead of the host session socket
+* `KODI_COMMAND` runs in a plain shell rather than a login shell, so dotfiles in the mounted home are not executed
+* `KODI_EXTRA_PACKAGES` is validated: each word must be a package name, so `apt-get` options cannot be injected
+* The README's systemd example no longer pulls an unpublished image name from a registry
 
 ### Fixed
 
 * Make the local `make build` target work in rootless Podman environments by default
 * Harden `entrypoint.sh` command and timeout handling
+* An invalid `KODI_QUIT_TIMEOUT` is rejected at startup instead of breaking graceful shutdown
+* The container exit status now reflects the Kodi command's exit status instead of always being 0
+* Dead screenshot and discussion links, and the deprecated `--homedir` option in the README example
 
 ## [3.0.0] - 2021-02-22
 
@@ -35,11 +50,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * Libretro core `fbalpha` as it is not available with Kodi 19
 
-## Fixed
+### Fixed
 
 * Missing video acceleration libraries ([#17](https://github.com/ehough/docker-kodi/issues/17))
 
-## Changed
+### Changed
 
 * Add `ARG DEBIAN_FRONTEND=noninteractive` to `Dockerfile` (see #34)
 
