@@ -5,12 +5,18 @@
 # kodi.bin (a copy of bash, so that `pidof kodi.bin` finds it).
 #
 # Usage: tests/test-image.sh            (after `make build`)
-#   CONTAINER_RUNTIME=docker IMAGE=... tests/test-image.sh
+#   CONTAINER_RUNTIME=docker IMAGE=... BUILD_FLAGS="--network=host" tests/test-image.sh
 
 set -euo pipefail
 
 readonly runtime="${CONTAINER_RUNTIME:-podman}"
 readonly image="${IMAGE:-just-barcodes/kodi}"
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+readonly repo_root
+
+# extra flags for the builds done by the tests (e.g. --network=host)
+read -ra build_flags <<< "${BUILD_FLAGS:-}"
 
 readonly fake_kodi_forever='cp /bin/bash /tmp/kodi.bin && /tmp/kodi.bin -c "while true; do sleep 1; done"'
 readonly fake_kodi_exits_after_3s='cp /bin/bash /tmp/kodi.bin && /tmp/kodi.bin -c "sleep 3; true"'
@@ -54,6 +60,14 @@ assert_eq () {  # description, expected, actual
   fi
 }
 
+assert_nonzero () {  # description, actual
+  if (( $2 != 0 )); then
+    pass "$1"
+  else
+    fail "$1 (expected a non-zero status)"
+  fi
+}
+
 assert_less_than () {  # description, limit, actual
   if (( $3 < $2 )); then
     pass "$1"
@@ -81,6 +95,26 @@ run_then_stop () {  # stop-timeout, run args...
   stop_seconds=$((SECONDS - started))
   logs=$("$runtime" logs "$cid" 2>&1)
   "$runtime" rm "$cid" > /dev/null
+}
+
+test_build_rejects_apt_options_in_extra_packages () {
+  # Words starting with "-" would be parsed by apt-get as options, and apt
+  # options such as Dpkg::Pre-Invoke run arbitrary commands as root.
+  local out rc=0
+  out=$("$runtime" build "${build_flags[@]}" --build-arg KODI_EXTRA_PACKAGES="kodi-pvr-iptvsimple -o Dpkg::Pre-Invoke::=id" \
+        -t "$image-rejected-test" "$repo_root" 2>&1) || rc=$?
+  assert_nonzero "build with apt options in KODI_EXTRA_PACKAGES fails" "$rc"
+  assert_contains "the offending word is reported" "$out" "invalid package name in KODI_EXTRA_PACKAGES: -o"
+  assert_not_contains "apt-get never runs" "$out" "Reading package lists"
+}
+
+test_build_with_extra_packages () {
+  local out rc=0
+  "$runtime" build "${build_flags[@]}" --build-arg KODI_EXTRA_PACKAGES=kodi-pvr-iptvsimple \
+        -t "$image-extra-packages-test" "$repo_root" > /dev/null 2>&1 || rc=$?
+  assert_eq "build with KODI_EXTRA_PACKAGES succeeds" 0 "$rc"
+  out=$("$runtime" run --rm --entrypoint dpkg-query "$image-extra-packages-test" -W -f "\${Status}" kodi-pvr-iptvsimple 2>&1)
+  assert_eq "the extra package is installed" "install ok installed" "$out"
 }
 
 test_kodi_binaries_present () {

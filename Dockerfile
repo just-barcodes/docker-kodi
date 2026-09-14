@@ -35,7 +35,13 @@ ARG KODI_EXTRA_PACKAGES=
 #  - tzdata                       necessary for timezone selection
 #  - va-driver-all                the full suite of drivers for the Video Acceleration API (VA API)
 # hadolint ignore=SC2086
-RUN packages="                                               \
+RUN for p in ${KODI_EXTRA_PACKAGES}; do                                       \
+      case "$p" in                                                             \
+        [!a-z0-9]*|*[![:alnum:].+=:~-]*)                                        \
+          echo "invalid package name in KODI_EXTRA_PACKAGES: $p" >&2; exit 1 ;; \
+      esac;                                                                     \
+    done                                                  && \
+    packages="                                               \
                                                              \
     ca-certificates                                          \
     kodi                                                     \
