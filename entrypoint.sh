@@ -55,8 +55,11 @@ get_kodi_pid () {
 
 stop_kodi () {
 
+  # exit status of the Kodi command, so a crash is not reported as success
+  local -r status=$?
+
   if [[ -z $(get_kodi_pid) ]]; then
-    die "Kodi does not appear to be running. Exiting." 0
+    die "Kodi does not appear to be running. Exiting." "$status"
   fi
 
   local timer=0
@@ -74,7 +77,7 @@ stop_kodi () {
   done
 
   if [[ -z $(get_kodi_pid) ]]; then
-    die 'Kodi terminated successfully' 0
+    die 'Kodi terminated successfully' "$status"
   fi
 
   log "WARNING: timeout of $timeout second(s) reached"

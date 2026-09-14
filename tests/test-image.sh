@@ -120,6 +120,12 @@ test_no_login_shell () {
   assert_not_contains "entrypoint does not run a login shell" "$out" "PROFILE_SOURCED"
 }
 
+test_exit_status_preserved () {
+  local rc=0
+  "$runtime" run --rm -e KODI_COMMAND="exit 3" "$image" > /dev/null 2>&1 || rc=$?
+  assert_eq "container exit status follows KODI_COMMAND" 3 "$rc"
+}
+
 test_stop_when_kodi_not_running () {
   run_then_stop 10 -e KODI_COMMAND="sleep 300"
   assert_contains "stopping without Kodi running exits immediately" "$logs" "Kodi does not appear to be running"
