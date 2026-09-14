@@ -129,6 +129,12 @@ test_entrypoint_permissions () {
   assert_eq "entrypoint is executable and owned by root" "755 root" "$out"
 }
 
+test_no_setuid_binaries () {
+  local out
+  out=$("$runtime" run --rm --user root --entrypoint find "$image" / -xdev -perm /6000 -type f 2>&1)
+  assert_eq "no setuid or setgid binaries remain in the image" "" "$out"
+}
+
 test_runs_as_unprivileged_user () {
   local out
   out=$("$runtime" run --rm -e KODI_COMMAND="echo uid=\$(id -u) user=\$(id -un)" "$image" 2>&1)

@@ -65,7 +65,9 @@ RUN for p in ${KODI_EXTRA_PACKAGES}; do                                       \
 # run Kodi as an unprivileged user. x11docker replaces it with the host user;
 # this is for everything else (plain docker/podman run, compose, ...).
 # The base image's "ubuntu" user is replaced so that "kodi" can have uid 1000.
-RUN userdel --remove ubuntu && useradd --create-home --uid 1000 kodi
+# Nothing in the image needs setuid/setgid binaries, so their bits are removed.
+RUN userdel --remove ubuntu && useradd --create-home --uid 1000 kodi && \
+    find / -xdev -perm /6000 -type f -exec chmod a-s {} +
 
 # setup entry point
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/
