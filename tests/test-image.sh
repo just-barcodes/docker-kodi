@@ -97,7 +97,7 @@ test_entrypoint_permissions () {
 
 test_runs_as_unprivileged_user () {
   local out
-  out=$("$runtime" run --rm -e KODI_COMMAND='echo "uid=$(id -u) user=$(id -un)"' "$image" 2>&1)
+  out=$("$runtime" run --rm -e KODI_COMMAND="echo uid=\$(id -u) user=\$(id -un)" "$image" 2>&1)
   assert_contains "Kodi runs as the unprivileged kodi user" "$out" "uid=1000 user=kodi"
 }
 
