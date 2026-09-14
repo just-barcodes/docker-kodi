@@ -95,6 +95,12 @@ test_entrypoint_permissions () {
   assert_eq "entrypoint is executable and owned by root" "755 root" "$out"
 }
 
+test_runs_as_unprivileged_user () {
+  local out
+  out=$("$runtime" run --rm -e KODI_COMMAND='echo "uid=$(id -u) user=$(id -un)"' "$image" 2>&1)
+  assert_contains "Kodi runs as the unprivileged kodi user" "$out" "uid=1000 user=kodi"
+}
+
 test_kodi_command_is_used () {
   local out
   out=$("$runtime" run --rm -e KODI_COMMAND="echo custom command ran" "$image" 2>&1)

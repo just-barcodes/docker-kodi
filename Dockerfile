@@ -56,6 +56,12 @@ RUN packages="                                               \
     apt-get clean                                         && \
     rm -rf /var/lib/apt/lists/*
 
+# run Kodi as an unprivileged user. x11docker replaces it with the host user;
+# this is for everything else (plain docker/podman run, compose, ...).
+# The base image's "ubuntu" user is replaced so that "kodi" can have uid 1000.
+RUN userdel --remove ubuntu && useradd --create-home --uid 1000 kodi
+
 # setup entry point
 COPY entrypoint.sh /usr/local/bin
+USER kodi
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
