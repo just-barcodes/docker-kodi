@@ -101,6 +101,17 @@ test_kodi_command_is_used () {
   assert_contains "KODI_COMMAND replaces kodi-standalone" "$out" "custom command ran"
 }
 
+test_no_login_shell () {
+  # A login shell would source ~/.profile from the (host-mounted) home
+  # directory, turning a data directory into a code-execution vector.
+  local home out
+  home=$(mktemp -d)
+  echo 'echo PROFILE_SOURCED' > "$home/.profile"
+  out=$("$runtime" run --rm -e HOME=/kodi-home -v "$home:/kodi-home:ro" -e KODI_COMMAND="echo done" "$image" 2>&1)
+  rm -rf "$home"
+  assert_not_contains "entrypoint does not run a login shell" "$out" "PROFILE_SOURCED"
+}
+
 test_stop_when_kodi_not_running () {
   run_then_stop 10 -e KODI_COMMAND="sleep 300"
   assert_contains "stopping without Kodi running exits immediately" "$logs" "Kodi does not appear to be running"

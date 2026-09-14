@@ -93,7 +93,7 @@ start_kodi () {
 
   log "starting Kodi with command: $command"
 
-  bash -lc "$command"
+  bash -c "$command"
 }
 
 start_kodi
