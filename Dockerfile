@@ -62,6 +62,6 @@ RUN packages="                                               \
 RUN userdel --remove ubuntu && useradd --create-home --uid 1000 kodi
 
 # setup entry point
-COPY entrypoint.sh /usr/local/bin
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/
 USER 1000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
