@@ -1,7 +1,7 @@
-# ehough/docker-kodi - Dockerized Kodi with audio and video.
+# just-barcodes/docker-kodi - Dockerized Kodi with audio and video.
 #
-# https://github.com/ehough/docker-kodi
-# https://hub.docker.com/r/erichough/kodi/
+# https://github.com/just-barcodes/docker-kodi
+# Forked from https://github.com/ehough/docker-kodi
 #
 # Copyright 2018-2021 - Eric Hough (eric@tubepress.com)
 #
@@ -34,7 +34,14 @@ ARG KODI_EXTRA_PACKAGES=
 #  - pulseaudio                   in case the user prefers PulseAudio instead of ALSA
 #  - tzdata                       necessary for timezone selection
 #  - va-driver-all                the full suite of drivers for the Video Acceleration API (VA API)
-RUN packages="                                               \
+# hadolint ignore=SC2086
+RUN for p in ${KODI_EXTRA_PACKAGES}; do                                       \
+      case "$p" in                                                             \
+        [!a-z0-9]*|*[![:alnum:].+=:~-]*)                                        \
+          echo "invalid package name in KODI_EXTRA_PACKAGES: $p" >&2; exit 1 ;; \
+      esac;                                                                     \
+    done                                                  && \
+    packages="                                               \
                                                              \
     ca-certificates                                          \
     kodi                                                     \
@@ -55,6 +62,14 @@ RUN packages="                                               \
     apt-get clean                                         && \
     rm -rf /var/lib/apt/lists/*
 
+# run Kodi as an unprivileged user. x11docker replaces it with the host user;
+# this is for everything else (plain docker/podman run, compose, ...).
+# The base image's "ubuntu" user is replaced so that "kodi" can have uid 1000.
+# Nothing in the image needs setuid/setgid binaries, so their bits are removed.
+RUN userdel --remove ubuntu && useradd --create-home --uid 1000 kodi && \
+    find / -xdev -perm /6000 -type f -exec chmod a-s {} +
+
 # setup entry point
-COPY entrypoint.sh /usr/local/bin
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/
+USER 1000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

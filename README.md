@@ -2,8 +2,6 @@
 
 Dockerized [Kodi](https://kodi.tv/) with audio and video.
 
-![Kodi screenshot](https://kodi.tv/sites/default/files/page/field_image/about--devices.jpg "Kodi screenshot")
-
 ## Features
 
 * fully-functional [Kodi](https://kodi.tv/) installation in a [Docker](https://www.docker.com/) container
@@ -11,6 +9,7 @@ Dockerized [Kodi](https://kodi.tv/) with audio and video.
   video acceleration) via [x11docker](https://github.com/mviereck/x11docker/)
 * simple Ubuntu 26.04 LTS image using the Kodi packages available in the Ubuntu repositories
 * clean shutdown of Kodi when its container is terminated
+* runs as an unprivileged user, with no third-party package repositories
 * `Makefile` helpers for local Podman build and `x11docker` execution
 
 ## Host Prerequisites
@@ -40,24 +39,31 @@ The host system will need the following:
 
 ### Starting Kodi
 
-Use `x11docker` to start the `just-barcodes/kodi` image. Detailing the myriad of `x11docker` options is beyond the 
-scope of this document; please consult the [`x11docker` documentation](https://github.com/mviereck/x11docker/) to find 
-the set of options that work for your setup.
-
-To build the image locally with Podman:
+The image is not published to a registry. Build it locally with Podman:
 
     $ make build
 
-Below is an example command (split into multiple lines for clarity) that starts Kodi with a fresh X.Org X server with
-PulseAudio sound, hardware video acceleration, a persistent Kodi home directory, and a shared read-only Docker mount for
+This tags the image as `localhost/just-barcodes/kodi`. The `localhost/` prefix means the container runtime will never
+try to pull an image of that name from a registry.
+
+Then use `x11docker` to start it. The quickest way is the Makefile helper, which starts Kodi under Wayland with
+PulseAudio sound, hardware video acceleration, network access, and a persistent Kodi home directory in
+`~/Videos/kodi` (override with `KODI_HOME=/some/path`):
+
+    $ make run
+
+Detailing the myriad of `x11docker` options is beyond the scope of this document; please consult the
+[`x11docker` documentation](https://github.com/mviereck/x11docker/) to find the set of options that work for your
+setup. Below is an example command (split into multiple lines for clarity) that starts Kodi with a fresh X.Org X server
+with PulseAudio sound, hardware video acceleration, a persistent Kodi home directory, and a shared read-only mount for
 media files:
 
     $ x11docker --xorg                                 \
                 --pulseaudio                           \
                 --gpu                                  \
-                --homedir /host/path/to/kodi/home      \
+                --home=/host/path/to/kodi/home         \
                 -- -v /host/path/to/media:/media:ro -- \
-                just-barcodes/kodi
+                localhost/just-barcodes/kodi
            
 Note that the optional argument passed between a pair of `--` defines additional arguments to be passed to the container runtime.
 
@@ -70,18 +76,31 @@ You can also [terminate the container from the command line](doc/advanced.md#com
 
 ### Example systemd Service Unit
 
+Build the image with `make build` before enabling the unit. Do not add a `podman pull` step: nothing publishes this
+image, so a pull would fetch whatever a registry happens to serve under that name.
+
     [Unit]
     Description=Dockerized Kodi
     After=network.target
     
     [Service]
-    ExecStartPre=/usr/bin/podman pull just-barcodes/kodi
-    ExecStart=/usr/bin/x11docker ... just-barcodes/kodi
+    ExecStart=/usr/bin/x11docker ... localhost/just-barcodes/kodi
     Restart=always
     KillMode=process
     
     [Install]
     WantedBy=multi-user.target
+
+## Security Notes
+
+* `x11docker` runs the container as your own (unprivileged) host user, drops all capabilities, and disables network
+  access unless `--network` is given. Run the image through `x11docker`; a plain `podman run` has no display and gets
+  none of that hardening, although the image itself still starts Kodi as an unprivileged user.
+* Any container with PulseAudio access can record the microphone and the audio of other applications. This is
+  inherent to giving a media player sound; prefer plain `--pulseaudio` (a dedicated socket) over `--pulseaudio=host`.
+* Kodi needs outbound network access, and `--network` also makes the rest of your LAN reachable from the container.
+  If you enable Kodi's web interface, set a password and do not publish its port.
+* `--gpu` shares the host GPU devices with the container. That is required for hardware video acceleration.
 
 ## Advanced
 
@@ -94,8 +113,8 @@ The [advanced topics](doc/advanced.md) documentation describes a few more useful
 
 ## Help!
 
-Something not working quite right? Are you stuck? Please ask your questions in the
-[discussion group](https://github.com/just-barcodes/docker-kodi/discussions), where we exchange help and share ideas.
+Something not working quite right? Are you stuck? Please
+[open an issue](https://github.com/just-barcodes/docker-kodi/issues).
 
 ## Contributing
 

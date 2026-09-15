@@ -25,13 +25,20 @@ podman build .                                                                  
 
 Add-on package names can be discovered with `apt-cache search '^kodi-'` inside an Ubuntu 26.04 environment, and you can install *any* Ubuntu package that you'd like.
 
+The value is checked before use: each word must look like a package name (optionally with `=version`), otherwise the build fails. This stops words such as `-o` from being interpreted as `apt-get` options. Remember that installing a package runs its maintainer scripts as root at build time, so only pass packages you trust.
+
 ## Image Variants
 
 This fork currently tracks the Kodi packages shipped by Ubuntu 26.04.
 
 | Image | Kodi |
 |-------|------|
-| `just-barcodes/kodi` | v21 "Omega" package stream from Ubuntu 26.04 |
+| `localhost/just-barcodes/kodi` | v21 "Omega" package stream from Ubuntu 26.04 |
+
+Kodi comes from Ubuntu's `universe` component. That keeps the image free of third-party package repositories and
+signing keys (earlier versions used the `team-xbmc` PPA), but `universe` is community maintained: it does not receive
+Canonical security support and will not follow upstream Kodi releases for the lifetime of Ubuntu 26.04. Rebuild the
+image regularly (`make build` always pulls the latest base image) to pick up whatever fixes Ubuntu does ship.
 
 ## Custom Startup Behavior
 
@@ -40,7 +47,13 @@ well for most installations. If you would like to customize this behavior, you c
 `KODI_COMMAND` to call additional scripts or processes before starting Kodi. For example, to reduce the priority of the 
 Kodi process:
 
-    $ x11docker ... -- '--cap-add SYS_NICE --env KODI_COMMAND="nice kodi-standalone"' just-barcodes/kodi
+    $ x11docker ... -- '--cap-add SYS_NICE --env KODI_COMMAND="nice kodi-standalone"' localhost/just-barcodes/kodi
+
+`KODI_COMMAND` is executed by a shell inside the container with the container user's privileges. Treat it as trusted
+operator input; never let it be set from user-controlled configuration.
+
+`x11docker` drops all capabilities by default. Only add back the ones you actually need, and never `SYS_ADMIN` or
+`ALL`.
     
 ## Command-Line Shutdown
 
@@ -63,7 +76,9 @@ Usually Kodi only takes a few seconds to shut down, so 10 seconds should be plen
 extend this timeout for any reason, you can utilize the environment variable `KODI_QUIT_TIMEOUT`. For example, to wait 
 120 seconds before timing out:
 
-    $ x11docker ... -- '--env KODI_QUIT_TIMEOUT=120' just-barcodes/kodi
+    $ x11docker ... -- '--env KODI_QUIT_TIMEOUT=120' localhost/just-barcodes/kodi
+
+The value must be a whole number of seconds; the container refuses to start otherwise.
     
 Note that if you increase this timeout, you should *only* stop Kodi with `podman stop` *and* use its `--time` option to 
 match your desired timeout. e.g.

@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# ehough/docker-kodi - Dockerized Kodi with audio and video.
+# just-barcodes/docker-kodi - Dockerized Kodi with audio and video.
 #
-# https://github.com/ehough/docker-kodi
-# https://hub.docker.com/r/erichough/kodi/
+# https://github.com/just-barcodes/docker-kodi
+# Forked from https://github.com/ehough/docker-kodi
 #
 # Copyright 2018-2021 - Eric Hough (eric@tubepress.com)
 #
@@ -55,17 +55,16 @@ get_kodi_pid () {
 
 stop_kodi () {
 
+  # exit status of the Kodi command, so a crash is not reported as success
+  local -r status=$?
+
   if [[ -z $(get_kodi_pid) ]]; then
-    die "Kodi does not appear to be running. Exiting." 0
+    die "Kodi does not appear to be running. Exiting." "$status"
   fi
 
   local timer=0
   local -r timeout="${!ENV_VAR_KODI_QUIT_TIMEOUT:-10}"
   local remaining
-
-  if ! [[ $timeout =~ ^[0-9]+$ ]]; then
-    die "Invalid $ENV_VAR_KODI_QUIT_TIMEOUT value: $timeout" 1
-  fi
 
   log "asking Kodi to quit"
   kodi-send --action="Quit"
@@ -78,22 +77,34 @@ stop_kodi () {
   done
 
   if [[ -z $(get_kodi_pid) ]]; then
-    die 'Kodi terminated successfully' 0
+    die 'Kodi terminated successfully' "$status"
   fi
 
   log "WARNING: timeout of $timeout second(s) reached"
+}
+
+check_quit_timeout () {
+
+  local -r timeout="${!ENV_VAR_KODI_QUIT_TIMEOUT:-10}"
+
+  if ! [[ $timeout =~ ^[0-9]+$ ]]; then
+    die "Invalid $ENV_VAR_KODI_QUIT_TIMEOUT value: $timeout" 1
+  fi
 }
 
 start_kodi () {
 
   local -r command="${!ENV_VAR_KODI_COMMAND:-kodi-standalone}"
 
+  # fail now rather than at shutdown, when it is too late to ask Kodi to quit
+  check_quit_timeout
+
   # gracefully stop Kodi whenever this script is terminated for any reason
   trap stop_kodi EXIT
 
   log "starting Kodi with command: $command"
 
-  bash -lc "$command"
+  bash -c "$command"
 }
 
 start_kodi

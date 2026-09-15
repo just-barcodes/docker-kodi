@@ -1,0 +1,4 @@
+ignored:
+  # Package versions intentionally track the Ubuntu repositories so that a
+  # rebuild picks up security updates; pinning them would break every rebuild.
+  - DL3008
