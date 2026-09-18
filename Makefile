@@ -16,4 +16,4 @@ build:
 
 .PHONY: run
 run:
-	x11docker --wayland --backend=podman --pulseaudio --gpu --home="$(KODI_HOME)" --network "$(IMAGE)"
+	x11docker --wayland --backend=podman --pipewire --gpu --home="$(KODI_HOME)" --network "$(IMAGE)"

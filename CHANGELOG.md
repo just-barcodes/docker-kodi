@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Refresh project documentation and examples for the `just-barcodes/kodi` fork and Podman-based workflow
 * Kodi runs as the unprivileged user `kodi` (uid 1000) instead of root; setuid/setgid bits are removed from the image
 * `make build` tags the image as `localhost/just-barcodes/kodi` and always pulls the latest base image
-* `make run` uses a dedicated PulseAudio socket (`--pulseaudio`) instead of the host session socket
+* `make run` uses a restricted PipeWire socket (`--pipewire`) instead of the host session's PulseAudio socket
 * `KODI_COMMAND` runs in a plain shell rather than a login shell, so dotfiles in the mounted home are not executed
 * `KODI_EXTRA_PACKAGES` is validated: each word must be a package name, so `apt-get` options cannot be injected
 * The README's systemd example no longer pulls an unpublished image name from a registry

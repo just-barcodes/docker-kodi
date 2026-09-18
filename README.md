@@ -47,7 +47,7 @@ This tags the image as `localhost/just-barcodes/kodi`. The `localhost/` prefix m
 try to pull an image of that name from a registry.
 
 Then use `x11docker` to start it. The quickest way is the Makefile helper, which starts Kodi under Wayland with
-PulseAudio sound, hardware video acceleration, network access, and a persistent Kodi home directory in
+PipeWire sound, hardware video acceleration, network access, and a persistent Kodi home directory in
 `~/Videos/kodi` (override with `KODI_HOME=/some/path`):
 
     $ make run
@@ -96,8 +96,10 @@ image, so a pull would fetch whatever a registry happens to serve under that nam
 * `x11docker` runs the container as your own (unprivileged) host user, drops all capabilities, and disables network
   access unless `--network` is given. Run the image through `x11docker`; a plain `podman run` has no display and gets
   none of that hardening, although the image itself still starts Kodi as an unprivileged user.
-* Any container with PulseAudio access can record the microphone and the audio of other applications. This is
-  inherent to giving a media player sound; prefer plain `--pulseaudio` (a dedicated socket) over `--pulseaudio=host`.
+* Any container with sound access can record the microphone and the audio of other applications. This is inherent
+  to giving a media player sound. On a PipeWire host use `--pipewire`, which hands the container a restricted socket;
+  on a PulseAudio host use plain `--pulseaudio` (a dedicated socket). `--pulseaudio=host` shares your session's
+  primary socket and cookie and is the least isolated choice.
 * Kodi needs outbound network access, and `--network` also makes the rest of your LAN reachable from the container.
   If you enable Kodi's web interface, set a password and do not publish its port.
 * `--gpu` shares the host GPU devices with the container. That is required for hardware video acceleration.
