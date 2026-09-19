@@ -4,9 +4,9 @@ Dockerized [Kodi](https://kodi.tv/) with audio and video.
 
 ## Features
 
-* fully-functional [Kodi](https://kodi.tv/) installation in a [Docker](https://www.docker.com/) container
-* **audio** ([ALSA or PulseAudio](https://kodi.wiki/view/Linux_audio)) and **video** (with optional OpenGL hardware 
-  video acceleration) via [x11docker](https://github.com/mviereck/x11docker/)
+* fully-functional [Kodi](https://kodi.tv/) installation in a container
+* **audio** (PipeWire, PulseAudio or [ALSA](https://kodi.wiki/view/Linux_audio)) and **video** (with optional OpenGL
+  hardware video acceleration) via [x11docker](https://github.com/mviereck/x11docker/)
 * simple Ubuntu 26.04 LTS image using the Kodi packages available in the Ubuntu repositories
 * clean shutdown of Kodi when its container is terminated
 * runs as an unprivileged user, with no third-party package repositories
@@ -16,9 +16,10 @@ Dockerized [Kodi](https://kodi.tv/) with audio and video.
 
 The host system will need the following:
 
-1. **Linux** and a container runtime such as [**Docker**](https://www.docker.com) or [**Podman**](https://podman.io/)
+1. **Linux** and [**Podman**](https://podman.io/)
 
-   This image should work on any Linux distribution with a functional container runtime installation.
+   The `Makefile` helpers use rootless Podman. [Docker](https://www.docker.com) works too if you build the image and
+   run `x11docker` by hand.
    
 1. **A connected display and speaker(s)**
 
@@ -26,14 +27,19 @@ The host system will need the following:
 
 1. **[X](https://www.x.org/) or [Wayland](https://wayland.freedesktop.org/)**
 
-   Ensure that the packages for an X or Wayland server are present on the Docker host. Please consult your distribution's 
-   documentation if you're not sure what to install. A display server does *not* need to be running ahead of time.
+   `make run` attaches to your *running* Wayland session. If you use `x11docker --xorg` instead, only the X server
+   packages need to be installed; `x11docker` starts a fresh X server itself.
+
+1. **PipeWire** (for `make run`) or **PulseAudio**
+
+   `make run` uses `x11docker --pipewire`, which needs `pw-container` from PipeWire on the host. On a PulseAudio host,
+   run `x11docker` by hand with `--pulseaudio` as shown below.
 
 1. **[x11docker](https://github.com/mviereck/x11docker/)**
 
-   `x11docker` allows Docker-based applications to utilize X and/or Wayland on the host. Please follow the `x11docker` 
+   `x11docker` allows containerized applications to utilize X and/or Wayland on the host. Please follow the `x11docker` 
    [installation instructions](https://github.com/mviereck/x11docker#installation) and ensure that you have a 
-   [working setup](https://github.com/mviereck/x11docker#examples) on the Docker host.
+   [working setup](https://github.com/mviereck/x11docker#examples) on the host.
        
 ## Usage
 
@@ -46,8 +52,8 @@ The image is not published to a registry. Build it locally with Podman:
 This tags the image as `localhost/just-barcodes/kodi`. The `localhost/` prefix means the container runtime will never
 try to pull an image of that name from a registry.
 
-Then use `x11docker` to start it. The quickest way is the Makefile helper, which starts Kodi under Wayland with
-PipeWire sound, hardware video acceleration, network access, and a persistent Kodi home directory in
+Then use `x11docker` to start it. The quickest way is the Makefile helper, which starts Kodi in your running Wayland
+session with PipeWire sound, hardware video acceleration, network access, and a persistent Kodi home directory in
 `~/Videos/kodi` (override with `KODI_HOME=/some/path`):
 
     $ make run
@@ -55,8 +61,8 @@ PipeWire sound, hardware video acceleration, network access, and a persistent Ko
 Detailing the myriad of `x11docker` options is beyond the scope of this document; please consult the
 [`x11docker` documentation](https://github.com/mviereck/x11docker/) to find the set of options that work for your
 setup. Below is an example command (split into multiple lines for clarity) that starts Kodi with a fresh X.Org X server
-with PulseAudio sound, hardware video acceleration, a persistent Kodi home directory, and a shared read-only mount for
-media files:
+with PulseAudio sound (use `--pipewire` on a PipeWire host), hardware video acceleration, a persistent Kodi home
+directory, and a shared read-only mount for media files:
 
     $ x11docker --xorg                                 \
                 --pulseaudio                           \
@@ -70,7 +76,7 @@ Note that the optional argument passed between a pair of `--` defines additional
 ### Stopping Kodi
 
 You can shut down Kodi just as you normally would; i.e. by using the power menu from the Kodi home screen. 
-Behind the scenes, the Docker container and `x11docker` processes will terminate cleanly.
+Behind the scenes, the container and `x11docker` processes will terminate cleanly.
 
 You can also [terminate the container from the command line](doc/advanced.md#command-line-shutdown).
 
@@ -79,17 +85,23 @@ You can also [terminate the container from the command line](doc/advanced.md#com
 Build the image with `make build` before enabling the unit. Do not add a `podman pull` step: nothing publishes this
 image, so a pull would fetch whatever a registry happens to serve under that name.
 
+Rootless Podman stores images per user, so the unit must run as the user who ran `make build`. Use `--xorg` here:
+`x11docker` then starts its own X server from the console, and no desktop session is required.
+
     [Unit]
     Description=Dockerized Kodi
     After=network.target
     
     [Service]
-    ExecStart=/usr/bin/x11docker ... localhost/just-barcodes/kodi
+    User=kodi-user
+    ExecStart=/usr/bin/x11docker --xorg --pulseaudio --gpu --home=/home/kodi-user/kodi localhost/just-barcodes/kodi
     Restart=always
     KillMode=process
     
     [Install]
     WantedBy=multi-user.target
+
+Replace `kodi-user` with that user and `--pulseaudio` with `--pipewire` on a PipeWire host.
 
 ## Security Notes
 
@@ -123,3 +135,11 @@ Something not working quite right? Are you stuck? Please
 Constructive criticism and contributions are welcome! Please 
 [submit an issue](https://github.com/just-barcodes/docker-kodi/issues/new) or 
 [pull request](https://github.com/just-barcodes/docker-kodi/compare).
+
+CI runs shellcheck, hadolint, an image build, and the integration tests in `tests/test-image.sh`. To run the same
+checks locally:
+
+    $ shellcheck -s bash entrypoint.sh tests/*.sh
+    $ hadolint Dockerfile
+    $ make build
+    $ tests/test-image.sh
